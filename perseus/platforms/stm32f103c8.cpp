@@ -239,6 +239,17 @@ hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
   }
 }
 
+hal::v5::optional_ptr<hal::input_pin> homing_pin_ptr;
+hal::v5::strong_ptr<hal::input_pin> homing_pin()
+{
+  if(not homing_pin_ptr)
+  {
+    auto homing_pin = gpio_c().acquire_input_pin(13);
+    homing_pin_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), std::move(homing_pin));
+  }
+  // swdiopin23 == pa13_jtms/swdio 
+  return homing_pin_ptr;
+}
 }  // namespace sjsu::perseus::resources
 namespace sjsu::perseus {
 void initialize_platform()

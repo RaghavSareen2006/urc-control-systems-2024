@@ -217,4 +217,26 @@ float bldc_perseus::position_feedforward()
     * m_servo_values.feedforward_clamp; 
 }
 
+void bldc_perseus::homing()
+{
+  auto homing = resources::homing_pin(); 
+  volatile auto homing_level = homing->level(); 
+  
+  // for elbow 
+  bldc_perseus::set_target_velocity(-1); 
+  bldc_perseus::update_velocity(1, 1); 
+  while(homing_level != 0) 
+  {
+    // for elbow
+    bldc_perseus::update_velocity(0, 1); 
+    homing_level = homing->level();
+  }
+  m_reading_velocity_settings = {0.0f, 0.0f, 0.0f}; 
+  bldc_perseus::update_velocity(1, 1); 
+
+  // set "homed value" to current encoder value 
+  home_encoder_value = m_encoder->read().angle;
+}
+
+
 }// namespace sjsu::perseus

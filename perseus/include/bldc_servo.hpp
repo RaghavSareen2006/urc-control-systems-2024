@@ -193,6 +193,12 @@ public:
   */
   bldc_perseus::PID_settings get_pid_settings();
 
+  /**
+   * @brief Bring [part] back until limit switch hit
+   * 
+   */
+  void homing(); 
+
   // Helper conversion functions (copied from drivetrain_math.hpp)
   constexpr hal::time_duration sec_to_hal_time_duration(sec p_time)
   {
