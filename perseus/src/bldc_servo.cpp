@@ -219,21 +219,22 @@ float bldc_perseus::position_feedforward()
 
 void bldc_perseus::homing()
 {
+  auto console = resources::console();
+  hal::print(*console, "Print homing\n");
   auto homing = resources::homing_pin(); 
   volatile auto homing_level = homing->level(); 
-  
   // for elbow 
-  bldc_perseus::set_target_velocity(-1); 
-  bldc_perseus::update_velocity(1, 1); 
+  bldc_perseus::set_target_velocity(5); 
+  bldc_perseus::update_position(); 
   while(homing_level != 0) 
   {
     // for elbow
-    bldc_perseus::update_velocity(0, 1); 
+    bldc_perseus::update_position(); 
     homing_level = homing->level();
   }
   m_reading_velocity_settings = {0.0f, 0.0f, 0.0f}; 
-  bldc_perseus::update_velocity(1, 1); 
-
+  bldc_perseus::update_position(); 
+  hal::print(*console, "Print homing\n");
   // set "homed value" to current encoder value 
   home_encoder_value = m_encoder->read().angle;
 }
