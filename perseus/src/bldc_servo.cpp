@@ -1,4 +1,5 @@
 #include <libhal-arm-mcu/stm32_generic/quadrature_encoder.hpp>
+#include <libhal-arm-mcu/stm32f1/output_pin.hpp> 
 #include <libhal/units.hpp>
 #include <libhal-util/serial.hpp>
 #include <libhal-util/steady_clock.hpp>
@@ -220,21 +221,24 @@ float bldc_perseus::position_feedforward()
 void bldc_perseus::homing()
 {
   auto console = resources::console();
-  hal::print(*console, "Print homing\n");
+  hal::print(*console, "Starting homing\n");
   auto homing = resources::homing_pin(); 
   volatile auto homing_level = homing->level(); 
   // for elbow 
-  bldc_perseus::set_target_velocity(5); 
+  //bldc_perseus::set_target_velocity(5); 
+  bldc_perseus::set_power(0.1f);
   bldc_perseus::update_position(); 
-  while(homing_level != 0) 
+  while(homing_level != false) 
   {
     // for elbow
     bldc_perseus::update_position(); 
     homing_level = homing->level();
+    hal::print<64>(*console, "%d\n", homing_level);
   }
+  bldc_perseus::set_power(0.0f);
   m_reading_velocity_settings = {0.0f, 0.0f, 0.0f}; 
   bldc_perseus::update_position(); 
-  hal::print(*console, "Print homing\n");
+  hal::print(*console, "Switch hit. Motor stopped.\n");
   // set "homed value" to current encoder value 
   home_encoder_value = m_encoder->read().angle;
 }

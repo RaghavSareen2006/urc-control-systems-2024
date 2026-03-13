@@ -250,6 +250,13 @@ hal::v5::strong_ptr<hal::input_pin> homing_pin()
   // swdiopin23 == pa13_jtms/swdio 
   return homing_pin_ptr;
 }
+
+// hal::v5::strong_ptr<hal::output_pin> output_pin_13()
+// {
+//   return hal::v5::make_strong_ptr<decltype(gpio_c().acquire_output_pin(13))>(
+//     driver_allocator(), gpio_c().acquire_output_pin(13));
+// }
+
 }  // namespace sjsu::perseus::resources
 namespace sjsu::perseus {
 void initialize_platform()
