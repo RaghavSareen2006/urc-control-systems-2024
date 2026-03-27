@@ -18,8 +18,14 @@ project(demos LANGUAGES CXX)
 
 libhal_build_demos(
   DEMOS
+<<<<<<< Updated upstream:perseus/CMakelists.txt
   application
 
+=======
+    application
+    pidApplication
+  
+>>>>>>> Stashed changes:perseus/CMakeLists.txt
   INCLUDES
   include
 

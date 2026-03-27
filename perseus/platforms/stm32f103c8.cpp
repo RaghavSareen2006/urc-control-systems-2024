@@ -131,6 +131,31 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
+<<<<<<< Updated upstream
+=======
+hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
+{
+  return timer2().acquire_quadrature_encoder(
+    driver_allocator(),
+    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+      1); 
+      //this is to just get the plain number of ticks, divided by two bc it reports both A and B channel
+}
+hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
+{
+  auto a_low = resources::pwm0_a8();
+  auto b_low = resources::rx1_a3();
+  hal::print(*console_ptr, "Acquired h-bridge low pins\n");
+  auto a_high = resources::pwm_channel_0();
+  auto b_high = resources::pwm_channel_1();
+  hal::print(*console_ptr, "Acquired h-bridge high pins\n");
+  auto h_bridge = sjsu::drivers::h_bridge({ a_high, a_low }, { b_high, b_low });
+  return hal::v5::make_strong_ptr<decltype(h_bridge)>(
+    resources::driver_allocator(), std::move(h_bridge));
+}
+hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
+>>>>>>> Stashed changes
 
 
 
