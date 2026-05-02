@@ -91,7 +91,7 @@ inline void sleep(hal::time_duration p_duration)
   hal::delay(*delay_clock, p_duration);
 }
 
-hal::v5::strong_ptr<hal::input_pin> homing_pin(); // for homing (pin 23)
+hal::v5::strong_ptr<hal::input_pin> homing_pin(); // for homing (pin 13)
 }  // namespace resources
 
 // Application function is implemented by one of the .cpp files.

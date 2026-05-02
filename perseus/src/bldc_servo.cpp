@@ -45,24 +45,24 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .last_error = 0,
     .prev_dt_time = 0.0 
   };
-  // elbow 
-  m_servo_values = {
-    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-    .feedforward_clamp = 0.2, 
-    .length = 0.4826, 
-    .angle_offset = -20, 
-    .weight_beam = 1000, 
-    .weight_end = 600 
-  }; 
-  // // shoulder 
+  // // elbow 
   // m_servo_values = {
-  //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
-  //   .feedforward_clamp = 0, 
-  //   .length = 0.5715, 
+  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+  //   .feedforward_clamp = 0.2, 
+  //   .length = 0.4826, 
   //   .angle_offset = -20, 
-  //   .weight_beam = 1600, 
-  //   .weight_end = 1600 
+  //   .weight_beam = 1000, 
+  //   .weight_end = 600 
   // }; 
+  // shoulder 
+  m_servo_values = {
+    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
+    .feedforward_clamp = 0, 
+    .length = 0.5715, 
+    .angle_offset = -20, 
+    .weight_beam = 1600, 
+    .weight_end = 1600 
+  }; 
   // // wrist 
   // m_servo_values = {
   //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
@@ -173,9 +173,32 @@ hal::degrees bldc_perseus::read_angle() {
 
 void bldc_perseus::update_velocity(bool from_scratch) 
 {
-  // TODO : implement velocity PID control
-  if (from_scratch) m_PID_prev_velocity_values.integral = 0; 
+// pid portion
+  m_reading.velocity = bldc_perseus::get_reading_velocity();
+  float error = m_target.velocity - m_reading.velocity;
+  sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
+  sec dt = curr_time - m_PID_prev_velocity_values.prev_dt_time;
+  if (from_scratch) m_PID_prev_velocity_values.integral = 0;
+  m_PID_prev_velocity_values.integral += error * dt; 
+  float derivative = (error - m_PID_prev_velocity_values.last_error) / dt; 
+  float pTerm = m_reading_velocity_settings.kp * error; 
+  float iTerm  = m_reading_velocity_settings.ki * m_PID_prev_velocity_values.integral; 
+  float dTerm = m_reading_velocity_settings.kd * derivative; 
+  m_PID_prev_velocity_values.last_error = error; 
+  m_PID_prev_velocity_values.prev_dt_time = curr_time;
+  float pid_sum = pTerm + iTerm + dTerm;
+  // use actual position here once can be communicated/calculated via can 
+  if (m_reading.position < 0) 
+  { 
+    pid_sum = std::clamp(pid_sum, -1 * m_clamped_power, m_clamped_power); 
+  }
+  else { 
+    pid_sum = std::clamp(pid_sum, -1 * m_clamped_power, m_clamped_power);
+  }
+  m_reading.power = pid_sum; 
+  m_h_bridge->power(m_reading.power); 
 }
+
 
 void bldc_perseus::reset_time()
 {
@@ -253,17 +276,17 @@ void bldc_perseus::homing()
   // for elbow 
   //bldc_perseus::set_target_velocity(5); 
   bldc_perseus::set_power(0.1f);
-  bldc_perseus::update_position(); 
+  bldc_perseus::update_position(true); 
   while(homing_level != false) 
   {
     // for elbow
-    bldc_perseus::update_position(); 
+    bldc_perseus::update_position(false); 
     homing_level = homing->level();
     hal::print<64>(*console, "%d\n", homing_level);
   }
   bldc_perseus::set_power(0.0f);
   m_reading_velocity_settings = {0.0f, 0.0f, 0.0f}; 
-  bldc_perseus::update_position(); 
+  bldc_perseus::update_position(true); 
   hal::print(*console, "Switch hit. Motor stopped.\n");
   // set "homed value" to current encoder value 
   home_encoder_value = m_encoder->read().angle;
